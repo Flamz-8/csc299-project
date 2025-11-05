@@ -1,24 +1,25 @@
-from tasks3.knowledge_base import KnowledgeBase, Note
+import pytest
+from task3.knowledge_base import KnowledgeBase
 
-def test_note_creation_with_tags():
+def test_note_creation_and_retrieval():
     kb = KnowledgeBase()
     note_id = kb.add_note(
-        title="Python Testing",
-        content="Testing is important",
-        tags=["python", "testing"]
+        "Test Note",
+        "Test content",
+        tags=["test", "example"]
     )
     note = kb.get_note(note_id)
-    assert note.title == "Python Testing"
-    assert "python" in note.tags
+    
+    assert note.title == "Test Note"
+    assert note.content == "Test content"
+    assert "test" in note.tags
     assert len(note.tags) == 2
 
 def test_note_search():
     kb = KnowledgeBase()
-    kb.add_note(
-        title="Search Test",
-        content="This is searchable content",
-        tags=["search"]
-    )
-    results = kb.search("searchable")
+    kb.add_note("Python Note", "Python is great", ["python"])
+    kb.add_note("Other Note", "Something else", ["other"])
+    
+    results = kb.search("python")
     assert len(results) == 1
-    assert results[0].title == "Search Test"
+    assert results[0].title == "Python Note"
