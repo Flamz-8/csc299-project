@@ -1,4 +1,4 @@
-from tasks3.task_manager import Task, TaskManager
+from task3.task_manager import Task, TaskManager
 
 def test_task_creation_and_retrieval():
     manager = TaskManager()
