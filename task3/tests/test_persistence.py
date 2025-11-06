@@ -7,12 +7,13 @@ from task3.pkms import PKMS
 def temp_pkms(tmp_path):
     """Create a PKMS instance with temporary storage"""
     original_data_dir = os.path.expanduser("~/.task3")
-    PKMS.data_dir = str(tmp_path)
+    test_dir = str(tmp_path)
+    PKMS.data_dir = test_dir
     manager = PKMS()
     yield manager
     PKMS.data_dir = original_data_dir
 
-def test_save_and_load(temp_pkms):
+def test_save_and_load(temp_pkms, tmp_path):
     # Create test data
     task_id = temp_pkms.add_task(
         "Test Task",
@@ -21,7 +22,8 @@ def test_save_and_load(temp_pkms):
         tags=["test"]
     )
     
-    # Create new instance to test loading
+    # Create new instance with same temp directory
+    PKMS.data_dir = str(tmp_path)  # Use same temp directory
     new_pkms = PKMS()
     loaded_task = new_pkms.tasks.get(task_id)
     
