@@ -7,6 +7,7 @@ class Task:
     id: int
     title: str
     description: str
+    priority: str
     created_date: datetime = datetime.now()
     completed: bool = False
 
@@ -15,8 +16,13 @@ class TaskManager:
         self.tasks = {}
         self.next_id = 1
 
-    def add_task(self, title: str, description: str) -> int:
-        task = Task(id=self.next_id, title=title, description=description)
+    def add_task(self, title: str, description: str, priority: str = "Medium") -> int:
+        task = Task(
+            id=self.next_id,
+            title=title,
+            description=description,
+            priority=priority
+        )
         self.tasks[task.id] = task
         self.next_id += 1
         return task.id
