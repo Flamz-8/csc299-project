@@ -32,7 +32,18 @@ class PKMS:
         self.next_task_id = 1
         self.next_note_id = 1
         self.data_dir = os.path.expanduser("~/.task3")
+        self._clear_data_dir()  # Clear data before loading
         self._load_data()
+
+    def _clear_data_dir(self) -> None:
+        """Clear all data files in the data directory"""
+        if os.path.exists(self.data_dir):
+            tasks_file = os.path.join(self.data_dir, "tasks.json")
+            notes_file = os.path.join(self.data_dir, "notes.json")
+            if os.path.exists(tasks_file):
+                os.remove(tasks_file)
+            if os.path.exists(notes_file):
+                os.remove(notes_file)
 
     def add_task(self, title: str, description: str, priority: str = "Medium", 
                 tags: List[str] = None, category: str = "General") -> int:
@@ -162,3 +173,12 @@ class PKMS:
                 }, f, indent=2)
         except Exception as e:
             print(f"Error saving notes: {e}")
+
+    def reset(self) -> None:
+        """Reset the PKMS to initial state"""
+        self.tasks.clear()
+        self.notes.clear()
+        self.next_task_id = 1
+        self.next_note_id = 1
+        self._clear_data_dir()
+        self._save_data()

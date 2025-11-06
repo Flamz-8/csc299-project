@@ -8,6 +8,7 @@ def pkms(tmp_path):
     original_dir = os.path.expanduser("~/.task3")
     PKMS.data_dir = str(tmp_path)
     system = PKMS()
+    system.reset()  # Ensure clean state
     yield system
     PKMS.data_dir = original_dir
 
