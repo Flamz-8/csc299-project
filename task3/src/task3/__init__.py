@@ -3,6 +3,18 @@ Task3 - Personal Knowledge Management System
 
 This package provides a unified PKMS that combines task and knowledge management
 in a single system with bi-directional linking capabilities.
+
+Testing:
+    # Run all tests
+    uv run pytest
+
+    # Run specific test categories
+    uv run pytest tests/test_search.py  # Search functionality
+    uv run pytest tests/test_core.py    # Core functionality
+    uv run pytest tests/test_linking.py # Task-Note linking
+
+    # Run specific test
+    uv run pytest tests/test_search.py::test_search_by_title
 """
 
 def inc(n: int) -> int:

@@ -87,6 +87,47 @@ for note in results:
     print(f"Found: {note.title}")
 ```
 
+## Testing
+
+### Running All Tests
+```bash
+cd task3
+uv run pytest
+```
+
+### Running Specific Test Files
+```bash
+# Run core functionality tests
+uv run pytest tests/test_core.py
+
+# Run search functionality tests
+uv run pytest tests/test_search.py
+
+# Run persistence tests
+uv run pytest tests/test_persistence.py
+
+# Run linking tests
+uv run pytest tests/test_linking.py
+```
+
+### Running Individual Tests
+```bash
+# Run a specific test function
+uv run pytest tests/test_search.py::test_search_by_title
+
+# Run tests with specific names (pattern matching)
+uv run pytest -k "search"  # Runs all tests with "search" in the name
+
+# Run tests with detailed output
+uv run pytest -v
+```
+
+### Test Coverage
+```bash
+# Run tests with coverage report
+uv run pytest --cov=task3
+```
+
 ## Development
 
 ### Running Tests
