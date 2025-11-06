@@ -2,6 +2,36 @@
 
 A simple Python package for managing tasks and personal knowledge.
 
+## Key Features
+
+- **Task Management**
+  - Create and track tasks with titles and descriptions
+  - Set priority levels (High/Medium/Low)
+  - Mark tasks as complete
+  - Simple and intuitive API
+  - Persistent JSON storage
+  - Automatic data saving
+
+- **Knowledge Base**
+  - Store and organize notes
+  - Tag-based organization
+  - Full-text search capability
+  - Easy retrieval and management
+  - JSON-based storage for easy backup
+  - Human-readable data format
+
+## Storage
+
+All data is stored in JSON format in the user's data directory:
+- Tasks: `~/.task3/tasks.json`
+- Notes: `~/.task3/notes.json`
+
+This makes it easy to:
+- Back up your data
+- Version control your tasks and notes
+- Share data between different machines
+- Manually edit if needed (though not recommended)
+
 ## Installation
 
 1. Clone the repository

@@ -2,8 +2,13 @@
 Task3 - Personal Knowledge and Task Management System
 
 This package provides two main components:
-1. TaskManager - For managing tasks and todos
-2. KnowledgeBase - For storing and retrieving notes
+1. TaskManager - For managing tasks and todos with JSON persistence
+2. KnowledgeBase - For storing and retrieving notes in JSON format
+
+Data Storage:
+    All data is stored in JSON format in ~/.task3/:
+    - tasks.json: Contains all tasks and their metadata
+    - notes.json: Contains all notes and their tags
 
 Quick Start:
     from task3.task_manager import TaskManager
