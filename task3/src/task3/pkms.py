@@ -95,4 +95,70 @@ class PKMS:
         self._save_tasks()
         self._save_notes()
 
-    # ... Add _load_tasks, _save_tasks, _load_notes, _save_notes methods similar to original implementation
+    def _load_tasks(self) -> None:
+        tasks_file = os.path.join(self.data_dir, "tasks.json")
+        if os.path.exists(tasks_file):
+            try:
+                with open(tasks_file, 'r') as f:
+                    data = json.load(f)
+                    for task_dict in data.get('tasks', []):
+                        task_dict['created_date'] = datetime.fromisoformat(task_dict['created_date'])
+                        task_dict['related_notes'] = set(task_dict['related_notes'])
+                        self.tasks[task_dict['id']] = Task(**task_dict)
+                    self.next_task_id = data.get('next_id', 1)
+            except (json.JSONDecodeError, KeyError) as e:
+                print(f"Error loading tasks: {e}")
+                self.tasks = {}
+                self.next_task_id = 1
+
+    def _save_tasks(self) -> None:
+        tasks_file = os.path.join(self.data_dir, "tasks.json")
+        try:
+            tasks_data = []
+            for task in self.tasks.values():
+                task_dict = asdict(task)
+                task_dict['created_date'] = task_dict['created_date'].isoformat()
+                task_dict['related_notes'] = list(task_dict['related_notes'])
+                tasks_data.append(task_dict)
+            
+            with open(tasks_file, 'w') as f:
+                json.dump({
+                    'tasks': tasks_data,
+                    'next_id': self.next_task_id
+                }, f, indent=2)
+        except Exception as e:
+            print(f"Error saving tasks: {e}")
+
+    def _load_notes(self) -> None:
+        notes_file = os.path.join(self.data_dir, "notes.json")
+        if os.path.exists(notes_file):
+            try:
+                with open(notes_file, 'r') as f:
+                    data = json.load(f)
+                    for note_dict in data.get('notes', []):
+                        note_dict['created_date'] = datetime.fromisoformat(note_dict['created_date'])
+                        note_dict['related_tasks'] = set(note_dict['related_tasks'])
+                        self.notes[note_dict['id']] = Note(**note_dict)
+                    self.next_note_id = data.get('next_id', 1)
+            except (json.JSONDecodeError, KeyError) as e:
+                print(f"Error loading notes: {e}")
+                self.notes = {}
+                self.next_note_id = 1
+
+    def _save_notes(self) -> None:
+        notes_file = os.path.join(self.data_dir, "notes.json")
+        try:
+            notes_data = []
+            for note in self.notes.values():
+                note_dict = asdict(note)
+                note_dict['created_date'] = note_dict['created_date'].isoformat()
+                note_dict['related_tasks'] = list(note_dict['related_tasks'])
+                notes_data.append(note_dict)
+            
+            with open(notes_file, 'w') as f:
+                json.dump({
+                    'notes': notes_data,
+                    'next_id': self.next_note_id
+                }, f, indent=2)
+        except Exception as e:
+            print(f"Error saving notes: {e}")
