@@ -32,7 +32,7 @@ class PKMS:
         self.next_task_id = 1
         self.next_note_id = 1
         self.data_dir = os.path.expanduser("~/.task3")
-        self._clear_data_dir()  # Clear data before loading
+        os.makedirs(self.data_dir, exist_ok=True)  # Just create directory if needed
         self._load_data()
 
     def _clear_data_dir(self) -> None:
@@ -176,9 +176,9 @@ class PKMS:
 
     def reset(self) -> None:
         """Reset the PKMS to initial state"""
+        self._clear_data_dir()  # Clear files first
         self.tasks.clear()
         self.notes.clear()
         self.next_task_id = 1
         self.next_note_id = 1
-        self._clear_data_dir()
-        self._save_data()
+        self._save_data()  # Save empty state
