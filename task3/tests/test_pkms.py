@@ -4,12 +4,12 @@ from task3.pkms import PKMS
 
 @pytest.fixture
 def pkms(tmp_path):
-    """Create a PKMS instance with temporary storage"""
-    original_data_dir = os.path.expanduser("~/.task3")
+    """Create a fresh PKMS instance with temporary storage for each test"""
+    original_dir = os.path.expanduser("~/.task3")
     PKMS.data_dir = str(tmp_path)
-    manager = PKMS()
-    yield manager
-    PKMS.data_dir = original_data_dir
+    system = PKMS()
+    yield system
+    PKMS.data_dir = original_dir
 
 def test_task_creation(pkms):
     task_id = pkms.add_task(
