@@ -4,17 +4,20 @@ from task3.pkms import PKMS
 
 @pytest.fixture
 def populated_pkms(tmp_path):
-    """Create a fresh PKMS instance with test data"""
+    """Create a fresh PKMS instance with test data in a temporary directory"""
     original_dir = os.path.expanduser("~/.task3")
     PKMS.data_dir = str(tmp_path)
-    system = PKMS()
+    pkms = PKMS()
+    pkms.reset()  # Start with clean state
     
     # Add test data
-    system.add_task("Python Task", "Learn Python", tags=["python"])
-    system.add_task("Java Task", "Learn Java", tags=["java"])
-    system.add_note("Python Note", "Python tips", tags=["python"])
+    pkms.add_task("Python Task", "Learn Python", tags=["python"])
+    pkms.add_task("Java Task", "Learn Java", tags=["java"])
+    pkms.add_note("Python Note", "Python tips", tags=["python"])
     
-    yield system
+    yield pkms
+    
+    # Cleanup
     PKMS.data_dir = original_dir
 
 def test_search_by_title(populated_pkms):
