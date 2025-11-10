@@ -1,0 +1,24 @@
+[project]
+name = "task4"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Flamz-8", email = "parth.v.desai25@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "openai>=2.7.2",
+]
+
+[project.scripts]
+task4 = "task4:main"
+
+[build-system]
+requires = ["uv_build>=0.9.7,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.0",
+]
