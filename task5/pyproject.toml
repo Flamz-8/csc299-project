@@ -1,0 +1,60 @@
+[project]
+name = "tasks-cli"
+version = "0.1.0"
+description = "Command-line task management application"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+tasks = "tasks_cli.__main__:main"
+
+[dependency-groups]
+dev = [
+    "black>=25.11.0",
+    "mypy>=1.18.2",
+    "pytest>=9.0.1",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.5",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "ANN", "S", "B", "A", "COM", "C4", "DTZ", "T10", "ISC", "ICN", "G", "PIE", "T20", "PT", "Q", "RET", "SIM", "TID", "ARG", "PTH", "PD", "PGH", "PL", "TRY", "NPY", "RUF"]
+ignore = ["ANN101", "ANN102", "COM812", "ISC001", "T201", "PLC0415", "TRY300", "PLR2004"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S607", "F841", "PT015", "B011", "PT017"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "--cov=src/tasks_cli --cov-report=term-missing --cov-fail-under=80"
+
+[tool.coverage.run]
+source = ["src/tasks_cli"]
+omit = ["tests/*", ".venv/*", "src/tasks_cli/__main__.py"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
