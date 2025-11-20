@@ -2,9 +2,9 @@ import os
 import sys
 # replaced direct import with guarded import
 try:
-    import openai
+    from openai import OpenAI
 except ImportError:
-    openai = None
+    OpenAI = None
 
 
 def _get_api_key():
@@ -14,21 +14,25 @@ def _get_api_key():
         raise RuntimeError("OPENAI_API_KEY not set in environment")
     return key
 
+# new: shared client instance
+_client = None
 
 def _summarize_paragraph(paragraph: str) -> str:
     """
     Send a single paragraph to the Chat Completions API (gpt-5-mini)
     and return the model's short-phrase summary.
     """
-    if openai is None:
+    if OpenAI is None:
         return "<error: openai package not installed>"
+    if _client is None:
+        return "<error: OpenAI client not initialized>"
     # system instruction asks for a very short phrase summary
     messages = [
         {"role": "system", "content": "You are a concise summarizer. Produce a short phrase (no more than 4 words) that captures the task described."},
         {"role": "user", "content": paragraph},
     ]
     try:
-        resp = openai.ChatCompletion.create(
+        resp = _client.chat.completions.create(
             model="gpt-5-mini",
             messages=messages,
             max_tokens=16,
@@ -40,10 +44,17 @@ def _summarize_paragraph(paragraph: str) -> str:
 
 
 def main() -> None:
-    if openai is None:
+    if OpenAI is None:
         print("Missing dependency 'openai'. Install with: uv add openai  (or)  pip install openai")
         return
-    openai.api_key = _get_api_key()
+    # initialize client (reads API key from env or use explicit)
+    try:
+        api_key = _get_api_key()
+    except Exception as e:
+        print(e)
+        return
+    global _client
+    _client = OpenAI(api_key=api_key)
 
     # Longer, multi-sentence paragraph-length descriptions
     sample_paragraphs = [
