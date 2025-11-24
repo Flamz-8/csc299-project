@@ -65,19 +65,22 @@ def parse_due_date(date_str: str) -> Optional[datetime]:
         if len(parts) >= 2:
             try:
                 count = int(parts[0])
+                # Validate positive count
+                if count <= 0:
+                    return None
+                    
                 unit = parts[1].rstrip('s')  # Remove plural 's'
 
-                if unit in ["day", "days"]:
+                if unit == "day":
                     target_date = now.date() + relativedelta(days=count)
-                elif unit in ["week", "weeks"]:
+                elif unit == "week":
                     target_date = now.date() + relativedelta(weeks=count)
-                elif unit in ["month", "months"]:
+                elif unit == "month":
                     target_date = now.date() + relativedelta(months=count)
                 else:
-                    target_date = None
+                    return None
 
-                if target_date:
-                    return datetime.combine(target_date, time(23, 59, 59))
+                return datetime.combine(target_date, time(23, 59, 59))
             except (ValueError, IndexError):
                 pass
 

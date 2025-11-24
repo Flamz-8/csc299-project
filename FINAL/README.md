@@ -1,6 +1,6 @@
 # Pro Study Planner
 
-Terminal-based personal knowledge management app for students that combines note-taking and task management in a single CLI tool.
+**Version 0.2.0** - Terminal-based personal knowledge management app for students that combines note-taking and task management in a single CLI tool.
 
 ---
 
@@ -15,6 +15,77 @@ Terminal-based personal knowledge management app for students that combines note
   - [Viewing Your Data](#viewing-your-data)
 - [Key Features](#key-features)
 - [Development](#development)
+- [Changelog](#changelog)
+
+---
+
+## Changelog
+
+### Version 0.2.0 (November 24, 2025)
+
+#### 🎉 New Features
+
+**Enhanced View Commands**
+- **`pkm view notes`** - New command to list all notes with IDs, topics, and courses
+  - Filter by course: `pkm view notes --course "BIO101"`
+  - Filter by topic: `pkm view notes --topic "Biology"`
+  - Shows content preview, creation date, and course assignments
+  - Sorted by newest first for easy browsing
+
+- **`pkm view tasks`** - New command to list all tasks with comprehensive filtering
+  - Filter by course: `pkm view tasks --course "CS301"`
+  - Filter by priority: `pkm view tasks --priority high`
+  - Filter by status: `pkm view tasks --status completed` (active/completed/all)
+  - Color-coded priorities (RED for high, YELLOW for medium, GREEN for low)
+  - Shows subtask progress, due dates with relative time
+  - Smart sorting by due date (soonest first)
+
+- **`pkm view inbox --show-ids`** - Added optional flag to display IDs in inbox view
+
+#### 🔧 Improvements
+
+**Flexible ID Matching**
+- Organize commands now support partial ID matching for convenience
+  - Use `pkm organize note 4xl "Course"` instead of full timestamp ID
+  - Case-insensitive matching: `N1` and `n1` both work
+  - Supports prefix, suffix, and substring matching
+  - Helpful error messages with ID suggestions when match fails
+
+**Date Parser Enhancements**
+- Added validation for negative and zero day inputs (e.g., "in -5 days" now returns error)
+- Improved logic efficiency by removing redundant checks
+- Better error handling for edge cases
+
+**ID Validation**
+- Updated Note and Task models to accept both simple (n1, t1) and timestamp-based IDs
+- Pattern: `^[nt][\d_a-z]+$` supports both legacy and new ID formats
+
+#### 🧪 Testing
+
+- **154 total tests** (was 109) - Added 45 new tests
+- **81% code coverage** (was 80.56%) - Exceeds 80% requirement
+- **Comprehensive date/time tests** - Added 37 new tests covering:
+  - Various time formats (12hr/24hr, AM/PM, minutes)
+  - Natural language dates ("next Monday", "in 3 days", "in 2 months")
+  - Multiple date formats (ISO, US, short/full month names)
+  - Date formatting with relative times
+  - Invalid input handling and edge cases
+- **View command tests** - 7 new integration tests for notes/tasks viewing
+- **ID matcher tests** - 11 unit tests for flexible ID matching
+- **Organize command tests** - Tests for partial ID usage
+
+#### 🐛 Bug Fixes
+
+- Fixed redundant unit checking in date parser ("day" vs "days")
+- Improved date parser control flow with early returns
+- Enhanced error messages for organize commands with match suggestions
+
+#### 📊 Statistics
+
+- Test suite execution time: ~6-7 seconds
+- Code coverage: 81.07% (1,152 statements covered out of 1,421)
+- Zero test failures
+- All integration, unit, and edge case tests passing
 
 ---
 

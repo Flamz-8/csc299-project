@@ -21,6 +21,8 @@ def view() -> None:
     \b
     Available views:
       pkm view inbox    - Show unorganized notes and tasks
+      pkm view notes    - Show all notes with IDs
+      pkm view tasks    - Show all tasks with IDs
       pkm view today    - Tasks due today
       pkm view week     - Tasks due this week
       pkm view overdue  - Overdue tasks
@@ -32,6 +34,8 @@ def view() -> None:
     \b
     Examples:
       pkm view inbox
+      pkm view notes
+      pkm view tasks
       pkm view today
       pkm view week
       pkm view inbox --data-dir ~/my-notes
@@ -159,6 +163,209 @@ def view_inbox(ctx: click.Context, show_ids: bool) -> None:
 
     total = len(inbox_notes) + len(inbox_tasks)
     info(f"Total inbox items: {total} ({len(inbox_notes)} notes, {len(inbox_tasks)} tasks)")
+
+
+@view.command(name="notes")
+@click.option("--course", help="Filter by course name")
+@click.option("--topic", help="Filter by topic")
+@click.pass_context
+def view_notes(ctx: click.Context, course: str | None, topic: str | None) -> None:
+    """View all notes with IDs for easy reference.
+
+    \b
+    Shows:
+      - All notes with their IDs
+      - Content preview
+      - Topics and course assignments
+      - Sorted by creation date (newest first)
+
+    \b
+    Options:
+      --course TEXT  Filter notes by course name
+      --topic TEXT   Filter notes by topic
+
+    \b
+    Examples:
+      # View all notes
+      pkm view notes
+
+      # View notes for a specific course
+      pkm view notes --course "BIO101"
+
+      # View notes by topic
+      pkm view notes --topic "Algorithms"
+
+    \b
+    Use the note IDs to:
+      - View full details: pkm view note <ID>
+      - Organize: pkm organize note <ID> "Course Name"
+      - Link to tasks: pkm task link-note <task-id> <note-id>
+    """
+    data_dir = get_data_dir(ctx)
+    note_service = NoteService(data_dir)
+
+    # Get notes based on filters
+    if course:
+        notes = note_service.get_notes_by_course(course)
+        title = f"Notes in '{course}'"
+    elif topic:
+        notes = note_service.get_notes_by_topic(topic)
+        title = f"Notes tagged '{topic}'"
+    else:
+        notes = note_service.list_notes()
+        title = "All Notes"
+
+    if not notes:
+        if course:
+            info(f"No notes found for course: {course}")
+        elif topic:
+            info(f"No notes found with topic: {topic}")
+        else:
+            info("No notes found")
+        return
+
+    # Sort by creation date (newest first)
+    notes.sort(key=lambda n: n.created_at, reverse=True)
+
+    # Create table
+    table = create_table(
+        f"{title} ({len(notes)})",
+        ["ID", "Content", "Topics", "Course", "Created"]
+    )
+
+    for note in notes:
+        table.add_row(
+            note.id,
+            truncate(note.content, 50),
+            truncate(", ".join(note.topics), 30) if note.topics else "-",
+            note.course or "[yellow](inbox)[/yellow]",
+            format_datetime(note.created_at),
+        )
+
+    Console().print(table)
+    info(f"Total: {len(notes)} notes")
+
+
+@view.command(name="tasks")
+@click.option("--course", help="Filter by course name")
+@click.option("--priority", type=click.Choice(["high", "medium", "low"], case_sensitive=False), help="Filter by priority")
+@click.option("--status", type=click.Choice(["active", "completed", "all"], case_sensitive=False), default="active", help="Filter by status (default: active)")
+@click.pass_context
+def view_tasks(ctx: click.Context, course: str | None, priority: str | None, status: str) -> None:
+    """View all tasks with IDs for easy reference.
+
+    \b
+    Shows:
+      - All tasks with their IDs
+      - Title, due date, priority
+      - Course assignments
+      - Subtask progress
+      - Sorted by due date (soonest first)
+
+    \b
+    Options:
+      --course TEXT        Filter tasks by course name
+      --priority TEXT      Filter by priority (high/medium/low)
+      --status TEXT        Filter by status: active (default), completed, or all
+
+    \b
+    Examples:
+      # View all active tasks
+      pkm view tasks
+
+      # View all tasks including completed
+      pkm view tasks --status all
+
+      # View high priority tasks
+      pkm view tasks --priority high
+
+      # View tasks for a specific course
+      pkm view tasks --course "BIO101"
+
+      # View completed tasks
+      pkm view tasks --status completed
+
+    \b
+    Use the task IDs to:
+      - View full details: pkm view task <ID>
+      - Organize: pkm organize task <ID> "Course Name"
+      - Mark complete: pkm task complete <ID>
+    """
+    data_dir = get_data_dir(ctx)
+    task_service = TaskService(data_dir)
+
+    # Get tasks based on filters
+    if course:
+        tasks = task_service.get_tasks_by_course(course)
+        title = f"Tasks in '{course}'"
+    elif priority:
+        tasks = task_service.get_tasks_by_priority(priority.lower())
+        title = f"{priority.capitalize()} Priority Tasks"
+    else:
+        tasks = task_service.list_tasks()
+        title = "All Tasks"
+
+    # Filter by completion status
+    if status == "active":
+        tasks = [t for t in tasks if not t.completed]
+        title = f"{title} (Active)"
+    elif status == "completed":
+        tasks = [t for t in tasks if t.completed]
+        title = f"{title} (Completed)"
+    # status == "all" includes everything
+
+    if not tasks:
+        if course:
+            info(f"No tasks found for course: {course}")
+        elif priority:
+            info(f"No {priority} priority tasks found")
+        else:
+            info("No tasks found")
+        return
+
+    # Sort by due date (soonest first), with None at the end
+    tasks.sort(key=lambda t: (t.due_date is None, t.due_date if t.due_date else datetime.max))
+
+    # Create table
+    table = create_table(
+        f"{title} ({len(tasks)})",
+        ["ID", "Title", "Due", "Priority", "Subtasks", "Course"]
+    )
+
+    for task in tasks:
+        # Format priority with color
+        priority_color = {
+            "high": "[red]HIGH[/red]",
+            "medium": "[yellow]MED[/yellow]",
+            "low": "[green]LOW[/green]",
+        }[task.priority]
+
+        # Format due date
+        due_display = format_due_date(task.due_date) if task.due_date else "-"
+
+        # Format subtasks progress
+        if task.subtasks:
+            completed_count = sum(1 for sub in task.subtasks if sub.completed)
+            subtasks_display = f"{completed_count}/{len(task.subtasks)} ✓"
+        else:
+            subtasks_display = "-"
+
+        # Add completion indicator if showing all tasks
+        title_display = task.title
+        if status == "all" and task.completed:
+            title_display = f"[dim strikethrough]{task.title}[/dim strikethrough]"
+
+        table.add_row(
+            task.id,
+            truncate(title_display, 35),
+            truncate(due_display, 25),
+            priority_color,
+            subtasks_display,
+            task.course or "[yellow](inbox)[/yellow]",
+        )
+
+    Console().print(table)
+    info(f"Total: {len(tasks)} tasks")
 
 
 @view.command(name="today")

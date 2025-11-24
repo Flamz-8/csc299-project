@@ -373,3 +373,287 @@ class TestViewCommands:
         # Should show empty course or indicate no items
         assert "Physics" in result.output
 
+    def test_view_notes_command_lists_all(self, temp_data_dir: Path) -> None:
+        """Test view notes command shows all notes with IDs."""
+        runner = CliRunner()
+
+        # Create multiple notes
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "note", "First note",
+                "--topics", "Topic1",
+            ],
+        )
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "note", "Second note",
+                "--course", "Biology",
+                "--topics", "Topic2",
+            ],
+        )
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "note", "Third note",
+            ],
+        )
+
+        # View all notes
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "notes"],
+        )
+
+        assert result.exit_code == 0
+        assert "All Notes (3)" in result.output
+        assert "First note" in result.output
+        assert "Second note" in result.output
+        assert "Third note" in result.output
+        assert "n1" in result.output
+        assert "n2" in result.output
+        assert "n3" in result.output
+        assert "Topic1" in result.output
+        assert "Topic2" in result.output
+        assert "Biology" in result.output
+
+    def test_view_notes_command_filter_by_course(self, temp_data_dir: Path) -> None:
+        """Test view notes command with course filter."""
+        runner = CliRunner()
+
+        # Create notes in different courses
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "note", "Biology note",
+                "--course", "Biology 101",
+            ],
+        )
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "note", "Math note",
+                "--course", "Math 201",
+            ],
+        )
+
+        # View notes filtered by course
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "notes", "--course", "Biology 101"],
+        )
+
+        assert result.exit_code == 0
+        assert "Biology 101" in result.output
+        assert "Biology note" in result.output
+        assert "Math note" not in result.output
+
+    def test_view_notes_command_filter_by_topic(self, temp_data_dir: Path) -> None:
+        """Test view notes command with topic filter."""
+        runner = CliRunner()
+
+        # Create notes with different topics
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "note", "Cell biology",
+                "--topics", "Biology",
+            ],
+        )
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "note", "Algebra basics",
+                "--topics", "Math",
+            ],
+        )
+
+        # View notes filtered by topic
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "notes", "--topic", "Biology"],
+        )
+
+        assert result.exit_code == 0
+        assert "Biology" in result.output
+        assert "Cell biology" in result.output
+        assert "Algebra basics" not in result.output
+
+    def test_view_tasks_command_lists_all(self, temp_data_dir: Path) -> None:
+        """Test view tasks command shows all active tasks with IDs."""
+        runner = CliRunner()
+
+        # Create multiple tasks
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "task", "First task",
+                "--priority", "high",
+            ],
+        )
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "task", "Second task",
+                "--course", "Biology",
+                "--priority", "medium",
+            ],
+        )
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "task", "Third task",
+                "--priority", "low",
+            ],
+        )
+
+        # View all tasks
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "tasks"],
+        )
+
+        assert result.exit_code == 0
+        assert "All Tasks (Active) (3)" in result.output
+        assert "First task" in result.output
+        assert "Second task" in result.output
+        assert "Third task" in result.output
+        assert "t1" in result.output
+        assert "t2" in result.output
+        assert "t3" in result.output
+        assert "HIGH" in result.output
+        assert "MED" in result.output
+        assert "LOW" in result.output
+
+    def test_view_tasks_command_filter_by_course(self, temp_data_dir: Path) -> None:
+        """Test view tasks command with course filter."""
+        runner = CliRunner()
+
+        # Create tasks in different courses
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "task", "Biology task",
+                "--course", "Biology 101",
+            ],
+        )
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "task", "Math task",
+                "--course", "Math 201",
+            ],
+        )
+
+        # View tasks filtered by course
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "tasks", "--course", "Biology 101"],
+        )
+
+        assert result.exit_code == 0
+        assert "Biology 101" in result.output
+        assert "Biology task" in result.output
+        assert "Math task" not in result.output
+
+    def test_view_tasks_command_filter_by_priority(self, temp_data_dir: Path) -> None:
+        """Test view tasks command with priority filter."""
+        runner = CliRunner()
+
+        # Create tasks with different priorities
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "task", "Important task",
+                "--priority", "high",
+            ],
+        )
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "task", "Normal task",
+                "--priority", "medium",
+            ],
+        )
+
+        # View tasks filtered by priority
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "tasks", "--priority", "high"],
+        )
+
+        assert result.exit_code == 0
+        assert "High Priority Tasks" in result.output
+        assert "Important task" in result.output
+        assert "Normal task" not in result.output
+
+    def test_view_tasks_command_filter_by_status(self, temp_data_dir: Path) -> None:
+        """Test view tasks command with status filter."""
+        runner = CliRunner()
+
+        # Create tasks and complete one
+        runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "task", "Active task",
+            ],
+        )
+        result = runner.invoke(
+            cli,
+            [
+                "--data-dir", str(temp_data_dir),
+                "add", "task", "Completed task",
+            ],
+        )
+        
+        # Get the task ID and mark it complete
+        task_id = result.output.split("Task created: ")[1].split()[0]
+        runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "task", "complete", task_id],
+        )
+
+        # View active tasks (default)
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "tasks"],
+        )
+        assert result.exit_code == 0
+        assert "Active task" in result.output
+        assert "Completed task" not in result.output
+
+        # View completed tasks
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "tasks", "--status", "completed"],
+        )
+        assert result.exit_code == 0
+        assert "Completed task" in result.output
+        assert "Active task" not in result.output
+
+        # View all tasks
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "tasks", "--status", "all"],
+        )
+        assert result.exit_code == 0
+        assert "Active task" in result.output
+        # Task title might be truncated in display
+        assert "Completed" in result.output or "t2" in result.output
+

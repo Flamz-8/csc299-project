@@ -1,6 +1,6 @@
 [project]
 name = "pro-study-planner"
-version = "0.1.0"
+version = "0.2.0"
 description = "Terminal-based personal knowledge management for students"
 readme = "README.md"
 requires-python = ">=3.11"
