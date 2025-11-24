@@ -36,13 +36,34 @@ def add() -> None:
     \b
     Quick capture commands:
       pkm add note CONTENT   - Capture a note
-      pkm add task TITLE     - Create a task
+      pkm add task TITLE     - Create a task with optional due date
 
     \b
     Examples:
+      # Add a note
       pkm add note "Biology lecture notes"
       pkm add note "DNA info" --topics "Biology" --course "BIO101"
-      pkm add task "Study for exam" --priority high
+      
+      # Add a task with due date
+      pkm add task "Study for exam" --due "tomorrow" --priority high
+      pkm add task "Submit paper" --due "Friday 11:59pm"
+      pkm add task "Final project" --due "2025-12-15"
+      
+      # Add subtasks to break down work
+      pkm task add-subtask TASK_ID "Research sources"
+      pkm task add-subtask TASK_ID "Write outline"
+      pkm task add-subtask TASK_ID "Complete draft"
+    
+    \b
+    Due Date Formats:
+      Natural language: "tomorrow", "next Friday", "in 3 days"
+      Specific dates:   "2025-12-01", "Dec 1 2025"
+      With times:       "Friday 11:59pm", "tomorrow at 3pm"
+    
+    \b
+    Managing Subtasks:
+      Add:   pkm task add-subtask TASK_ID "Subtask description"
+      Check: pkm task check-subtask TASK_ID SUBTASK_ID
     """
     pass
 
