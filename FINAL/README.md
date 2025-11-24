@@ -851,7 +851,14 @@ See `specs/001-student-pkm-cli/` for detailed specifications and task breakdown.
 
 ## Acknowledgments
 
-Built with:
+### AI Development Assistance
+
+This project was developed with assistance from:
+- **GitHub Copilot** - AI pair programmer for code completion and suggestions
+- **Claude (Anthropic)** - AI assistant for architecture design, debugging, and implementation guidance
+
+### Built With
+
 - [Click](https://click.palletsprojects.com/) - CLI framework
 - [Pydantic](https://docs.pydantic.dev/) - Data validation
 - [Rich](https://rich.readthedocs.io/) - Terminal formatting
