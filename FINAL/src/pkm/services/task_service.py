@@ -337,6 +337,41 @@ class TaskService:
 
         return None
 
+    def delete_task(self, task_id: str) -> bool:
+        """Delete a task and clean up references in linked notes.
+
+        Args:
+            task_id: Task ID to delete
+
+        Returns:
+            True if deleted, False if not found
+        """
+        data = self.store.load()
+
+        # Find and remove the task
+        for i, task_data in enumerate(data["tasks"]):
+            if task_data["id"] == task_id:
+                task = deserialize_task(task_data)
+                
+                # Remove this task from any linked notes
+                if task.linked_notes:
+                    for note_id in task.linked_notes:
+                        for j, note_data in enumerate(data["notes"]):
+                            if note_data["id"] == note_id:
+                                linked_tasks = note_data.get("linked_from_tasks", [])
+                                if task_id in linked_tasks:
+                                    linked_tasks.remove(task_id)
+                                    note_data["linked_from_tasks"] = linked_tasks
+                                    data["notes"][j] = note_data
+                                break
+                
+                # Delete the task
+                del data["tasks"][i]
+                self.store.save(data)
+                return True
+
+        return False
+
     def unlink_note(self, task_id: str, note_id: str) -> Task | None:
         """Unlink a note from a task (bidirectional).
 

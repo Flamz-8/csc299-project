@@ -657,3 +657,148 @@ class TestViewCommands:
         # Task title might be truncated in display
         assert "Completed" in result.output or "t2" in result.output
 
+    def test_view_topics_command_lists_all(self, temp_data_dir: Path) -> None:
+        """Test view topics command lists all topics."""
+        runner = CliRunner()
+
+        # Create notes with various topics
+        runner.invoke(
+            cli,
+            [
+                "--data-dir",
+                str(temp_data_dir),
+                "add",
+                "note",
+                "Machine learning basics",
+                "--topics",
+                "AI",
+                "--topics",
+                "Machine Learning",
+            ],
+        )
+        runner.invoke(
+            cli,
+            [
+                "--data-dir",
+                str(temp_data_dir),
+                "add",
+                "note",
+                "Neural networks",
+                "--topics",
+                "AI",
+                "--topics",
+                "Deep Learning",
+            ],
+        )
+        runner.invoke(
+            cli,
+            [
+                "--data-dir",
+                str(temp_data_dir),
+                "add",
+                "note",
+                "Biology basics",
+                "--topics",
+                "Biology",
+                "--topics",
+                "Science",
+            ],
+        )
+
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "topics"],
+        )
+        assert result.exit_code == 0
+        assert "AI" in result.output
+        assert "Machine Learning" in result.output
+        assert "Deep Learning" in result.output
+        assert "Biology" in result.output
+        assert "Science" in result.output
+        assert "Found 5 topics" in result.output
+
+    def test_view_topics_command_filter_by_topic(self, temp_data_dir: Path) -> None:
+        """Test view topics command with topic filter."""
+        runner = CliRunner()
+
+        # Create notes with various topics
+        runner.invoke(
+            cli,
+            [
+                "--data-dir",
+                str(temp_data_dir),
+                "add",
+                "note",
+                "ML basics",
+                "--topics",
+                "AI",
+                "--topics",
+                "Machine Learning",
+            ],
+        )
+        runner.invoke(
+            cli,
+            [
+                "--data-dir",
+                str(temp_data_dir),
+                "add",
+                "note",
+                "Biology basics",
+                "--topics",
+                "Biology",
+            ],
+        )
+
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "topics", "--topic", "AI"],
+        )
+        assert result.exit_code == 0
+        assert "AI" in result.output
+        assert "ML basics" in result.output
+        assert "Biology" not in result.output
+        assert "Found 1 topics" in result.output
+
+    def test_view_topics_command_empty(self, temp_data_dir: Path) -> None:
+        """Test view topics with no topics."""
+        runner = CliRunner()
+
+        # Create note without topics
+        runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "add", "note", "No topics here"],
+        )
+
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "topics"],
+        )
+        assert result.exit_code == 0
+        assert "No topics found" in result.output
+
+    def test_view_topics_command_not_found(self, temp_data_dir: Path) -> None:
+        """Test view topics with nonexistent topic."""
+        runner = CliRunner()
+
+        # Create note with topic
+        runner.invoke(
+            cli,
+            [
+                "--data-dir",
+                str(temp_data_dir),
+                "add",
+                "note",
+                "Test note",
+                "--topics",
+                "Testing",
+            ],
+        )
+
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "topics", "--topic", "NonExistent"],
+        )
+        assert result.exit_code == 1
+        assert "Topic not found: NonExistent" in result.output
+        assert "Available topics:" in result.output
+

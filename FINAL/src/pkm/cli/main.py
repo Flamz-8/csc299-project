@@ -141,7 +141,7 @@ def cli(ctx: click.Context, data_dir: str | None, no_color: bool, verbose: bool)
 
 # Import command groups to register them with the CLI
 # This must happen after cli() is defined
-from pkm.cli import add, help, note, organize, search, task, view  # noqa: E402, F401
+from pkm.cli import add, course, help, note, organize, search, task, view  # noqa: E402, F401
 
 
 # Add custom error handling for better user experience

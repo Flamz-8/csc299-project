@@ -88,6 +88,104 @@ class TestNoteCommands:
         assert result.exit_code == 1
         assert "not found" in result.output.lower()
 
+    def test_delete_topic_from_note(self, temp_data_dir: Path) -> None:
+        """Test deleting a specific topic from a note."""
+        runner = CliRunner()
+
+        # Create note with multiple topics
+        runner.invoke(
+            cli,
+            [
+                "--data-dir",
+                str(temp_data_dir),
+                "add",
+                "note",
+                "Multi-topic note",
+                "--topics",
+                "Topic1",
+                "--topics",
+                "Topic2",
+                "--topics",
+                "Topic3",
+            ],
+        )
+
+        # Delete one topic
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "note", "delete-topic", "n1", "Topic2"],
+        )
+
+        assert result.exit_code == 0
+        assert "removed" in result.output.lower()
+        assert "Topic1" in result.output or "Topic3" in result.output
+
+    def test_delete_topic_not_found_in_note(self, temp_data_dir: Path) -> None:
+        """Test deleting a topic that doesn't exist in the note."""
+        runner = CliRunner()
+
+        # Create note with one topic
+        runner.invoke(
+            cli,
+            [
+                "--data-dir",
+                str(temp_data_dir),
+                "add",
+                "note",
+                "Single topic",
+                "--topics",
+                "OnlyTopic",
+            ],
+        )
+
+        # Try to delete non-existent topic (should still succeed but note will mention it)
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "note", "delete-topic", "n1", "NonExistent"],
+        )
+
+        # Command succeeds but topic wasn't there
+        assert result.exit_code == 0
+
+    def test_delete_last_topic_from_note(self, temp_data_dir: Path) -> None:
+        """Test deleting the last topic from a note."""
+        runner = CliRunner()
+
+        # Create note with one topic
+        runner.invoke(
+            cli,
+            [
+                "--data-dir",
+                str(temp_data_dir),
+                "add",
+                "note",
+                "One topic note",
+                "--topics",
+                "LastTopic",
+            ],
+        )
+
+        # Delete the only topic
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "note", "delete-topic", "n1", "LastTopic"],
+        )
+
+        assert result.exit_code == 0
+        assert "no topics" in result.output.lower() or "removed" in result.output.lower()
+
+    def test_delete_topic_note_not_found(self, temp_data_dir: Path) -> None:
+        """Test deleting topic from non-existent note."""
+        runner = CliRunner()
+
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "note", "delete-topic", "n999", "AnyTopic"],
+        )
+
+        assert result.exit_code == 1
+        assert "not found" in result.output.lower()
+
     def test_delete_note_with_confirmation(self, temp_data_dir: Path) -> None:
         """Test US4-S5: Deleting a note with confirmation prompt."""
         runner = CliRunner()

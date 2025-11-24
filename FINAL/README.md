@@ -40,7 +40,32 @@
   - Shows subtask progress, due dates with relative time
   - Smart sorting by due date (soonest first)
 
+- **`pkm view topics`** - New command to browse notes by topic
+  - Lists all topics with associated notes grouped by course
+  - Filter by specific topic: `pkm view topics --topic "Machine Learning"`
+  - Shows note count per topic and content previews
+  - Helps explore knowledge base thematically
+
 - **`pkm view inbox --show-ids`** - Added optional flag to display IDs in inbox view
+
+**Delete & Cleanup Commands**
+- **`pkm task delete TASK_ID`** - Delete tasks with confirmation
+  - Interactive confirmation prompt with task details
+  - `--yes` / `-y` flag to skip confirmation
+  - Automatically cleans up references in linked notes
+  - Handles tasks with subtasks and linked notes
+
+- **`pkm note delete-topic NOTE_ID TOPIC`** - Remove specific topics from notes
+  - Alias for `remove-topic` for easier discovery
+  - Shows remaining topics after deletion
+  - Handles edge cases (last topic, non-existent topic)
+
+- **`pkm course delete COURSE_NAME`** - Delete courses with flexible handling
+  - Default: moves all notes/tasks to inbox (safe)
+  - `--delete-items` flag: permanently deletes all course content
+  - Confirmation prompt with item counts
+  - `--yes` / `-y` flag to skip confirmation
+  - Preserves other courses' data
 
 #### 🔧 Improvements
 
@@ -50,6 +75,13 @@
   - Case-insensitive matching: `N1` and `n1` both work
   - Supports prefix, suffix, and substring matching
   - Helpful error messages with ID suggestions when match fails
+
+**Editor Integration Fixed**
+- Improved external editor support with proper command parsing
+  - Now handles editors with arguments: `EDITOR="code --wait"`, `EDITOR="vim -n"`
+  - Platform-specific execution (Windows uses shell, Unix uses proper splitting)
+  - Better whitespace handling in content comparison
+  - Improved error handling for non-zero exit codes (VS Code compatibility)
 
 **Date Parser Enhancements**
 - Added validation for negative and zero day inputs (e.g., "in -5 days" now returns error)
@@ -62,30 +94,42 @@
 
 #### 🧪 Testing
 
-- **154 total tests** (was 109) - Added 45 new tests
-- **81% code coverage** (was 80.56%) - Exceeds 80% requirement
+- **186 total tests** (was 109) - Added 77 new tests
+- **84% code coverage** (was 80.56%) - Exceeds 80% requirement
 - **Comprehensive date/time tests** - Added 37 new tests covering:
   - Various time formats (12hr/24hr, AM/PM, minutes)
   - Natural language dates ("next Monday", "in 3 days", "in 2 months")
   - Multiple date formats (ISO, US, short/full month names)
   - Date formatting with relative times
   - Invalid input handling and edge cases
-- **View command tests** - 7 new integration tests for notes/tasks viewing
+- **View command tests** - 11 new integration tests for notes/tasks/topics viewing
 - **ID matcher tests** - 11 unit tests for flexible ID matching
 - **Organize command tests** - Tests for partial ID usage
+- **Delete command tests** - 20 new tests covering:
+  - Task deletion with/without confirmation
+  - Task deletion with linked notes (reference cleanup)
+  - Topic deletion from notes (all edge cases)
+  - Course deletion with move-to-inbox and delete-items modes
+  - Service-level unit tests for delete operations
+- **Service layer tests** - 12 new unit tests for NoteService, TaskService, CourseService
 
 #### 🐛 Bug Fixes
 
 - Fixed redundant unit checking in date parser ("day" vs "days")
 - Improved date parser control flow with early returns
+- Fixed editor command parsing for editors with arguments (code, vim, subl)
+- Fixed editor return code handling for VS Code and other non-zero exit editors
 - Enhanced error messages for organize commands with match suggestions
 
 #### 📊 Statistics
 
-- Test suite execution time: ~6-7 seconds
-- Code coverage: 81.07% (1,152 statements covered out of 1,421)
+- Test suite execution time: ~10-11 seconds
+- Total tests: 186 (77 new tests added)
+- Code coverage: 84.06% (1,350 statements covered out of 1,606)
 - Zero test failures
 - All integration, unit, and edge case tests passing
+- New CLI commands: 4 (`view notes`, `view tasks`, `view topics`, `task delete`, `note delete-topic`, `course delete`)
+- New service methods: 3 (`delete_task`, `delete_course`, `get_all_topics`)
 
 ---
 

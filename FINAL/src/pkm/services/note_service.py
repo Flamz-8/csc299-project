@@ -162,6 +162,20 @@ class NoteService:
         """
         return [note for note in self.list_notes() if topic_name in note.topics]
 
+    def get_all_topics(self) -> dict[str, list[Note]]:
+        """Get all topics with their associated notes grouped by course.
+
+        Returns:
+            Dictionary mapping topic names to lists of notes
+        """
+        topics_map: dict[str, list[Note]] = {}
+        for note in self.list_notes():
+            for topic in note.topics:
+                if topic not in topics_map:
+                    topics_map[topic] = []
+                topics_map[topic].append(note)
+        return topics_map
+
     def add_topics(self, note_id: str, topics: list[str]) -> Note | None:
         """Add topics to a note.
 

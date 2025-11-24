@@ -35,16 +35,18 @@ def note() -> None:
 
     \b
     Commands:
-      pkm note edit NOTE_ID       - Edit note in external editor
-      pkm note delete NOTE_ID     - Delete a note
-      pkm note add-topic NOTE_ID  - Add topics to a note
-      pkm note remove-topic       - Remove topic from a note
+      pkm note edit NOTE_ID            - Edit note in external editor
+      pkm note delete NOTE_ID          - Delete a note
+      pkm note add-topic NOTE_ID       - Add topics to a note
+      pkm note remove-topic NOTE_ID    - Remove topic from a note
+      pkm note delete-topic NOTE_ID    - Delete/remove a specific topic
 
     \b
     Examples:
       pkm note edit n_20251123_142055_abc
       pkm note delete n_20251123_142055_abc
       pkm note add-topic n_20251123_142055_abc "Biology"
+      pkm note delete-topic n1 "Old Topic"
     """
     pass
 
@@ -254,3 +256,44 @@ def remove_topic_from_note(ctx: click.Context, note_id: str, topic: str) -> None
     except Exception as e:
         error(f"Failed to remove topic: {e}")
         ctx.exit(1)
+
+
+@note.command(name="delete-topic")
+@click.argument("note_id", required=True)
+@click.argument("topic", required=True)
+@click.pass_context
+def delete_topic_from_note(ctx: click.Context, note_id: str, topic: str) -> None:
+    """Delete/remove a specific topic from a note.
+
+    \b
+    NOTE_ID: The note ID
+    TOPIC:   The topic to remove
+
+    \b
+    Examples:
+      pkm note delete-topic n1 "Biology"
+      pkm note delete-topic n_20251123_142055_abc "Old Topic"
+
+    This is an alias for remove-topic for easier discovery.
+    """
+    try:
+        data_dir = get_data_dir(ctx)
+        service = NoteService(data_dir)
+
+        note = service.remove_topic(note_id, topic)
+
+        if note is None:
+            error(f"Note not found: {note_id}")
+            info("Use 'pkm view inbox' to see note IDs")
+            ctx.exit(1)
+
+        success(f"Topic '{topic}' removed from note {note_id}")
+        if note.topics:
+            info(f"Remaining topics: {', '.join(note.topics)}")
+        else:
+            info("Note has no topics")
+
+    except Exception as e:
+        error(f"Failed to delete topic: {e}")
+        ctx.exit(1)
+

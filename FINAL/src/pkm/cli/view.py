@@ -23,6 +23,7 @@ def view() -> None:
       pkm view inbox    - Show unorganized notes and tasks
       pkm view notes    - Show all notes with IDs
       pkm view tasks    - Show all tasks with IDs
+      pkm view topics   - Show all topics with associated notes
       pkm view today    - Tasks due today
       pkm view week     - Tasks due this week
       pkm view overdue  - Overdue tasks
@@ -36,6 +37,7 @@ def view() -> None:
       pkm view inbox
       pkm view notes
       pkm view tasks
+      pkm view topics
       pkm view today
       pkm view week
       pkm view inbox --data-dir ~/my-notes
@@ -366,6 +368,80 @@ def view_tasks(ctx: click.Context, course: str | None, priority: str | None, sta
 
     Console().print(table)
     info(f"Total: {len(tasks)} tasks")
+
+
+@view.command(name="topics")
+@click.option("--topic", help="Filter by specific topic name")
+@click.pass_context
+def view_topics(ctx: click.Context, topic: str | None = None) -> None:
+    """View all topics with associated notes.
+
+    \b
+    Shows:
+      - All topics found in notes
+      - Number of notes per topic
+      - Notes grouped by course
+      - Preview of note content
+
+    \b
+    Examples:
+      # View all topics
+      pkm view topics
+
+      # View specific topic
+      pkm view topics --topic "Machine Learning"
+
+      # With custom data location
+      pkm --data-dir ~/study-notes view topics
+
+    Use this to explore your knowledge base by topic!
+    """
+    data_dir = get_data_dir(ctx)
+    note_service = NoteService(data_dir)
+    console = Console()
+
+    # Get all topics
+    topics_map = note_service.get_all_topics()
+
+    if not topics_map:
+        info("No topics found. Add topics to notes using 'pkm organize add-topic'")
+        ctx.exit(0)
+
+    # Filter if specific topic requested
+    if topic:
+        if topic not in topics_map:
+            from pkm.cli.helpers import error
+            error(f"Topic not found: {topic}")
+            info(f"Available topics: {', '.join(sorted(topics_map.keys()))}")
+            ctx.exit(1)
+        topics_map = {topic: topics_map[topic]}
+
+    # Sort topics alphabetically
+    sorted_topics = sorted(topics_map.items())
+
+    # Display each topic
+    for topic_name, notes in sorted_topics:
+        console.print(f"\n[bold cyan]{topic_name}[/bold cyan] [dim]({len(notes)} notes)[/dim]")
+        
+        # Group notes by course
+        by_course: dict[str, list] = {}
+        for note in notes:
+            course = note.course or "(inbox)"
+            if course not in by_course:
+                by_course[course] = []
+            by_course[course].append(note)
+        
+        # Display notes grouped by course
+        for course, course_notes in sorted(by_course.items()):
+            console.print(f"  [yellow]{course}[/yellow]")
+            for note in course_notes:
+                # Show note preview (first 60 chars)
+                preview = truncate(note.content, 60)
+                console.print(f"    • {note.id}: {preview}")
+    
+    console.print()
+    total_notes = sum(len(notes) for notes in topics_map.values())
+    info(f"Found {len(topics_map)} topics across {total_notes} note references")
 
 
 @view.command(name="today")

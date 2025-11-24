@@ -5,6 +5,7 @@ Respects $EDITOR environment variable with platform-specific fallbacks.
 
 import os
 import platform
+import shlex
 import subprocess
 import tempfile
 from pathlib import Path
@@ -54,20 +55,27 @@ def open_in_editor(content: str, file_extension: str = ".txt") -> Optional[str]:
         tmp_path = Path(tmp_file.name)
 
     try:
-        # Launch editor
-        result = subprocess.run(
-            [editor, str(tmp_path)],
-            check=True
-        )
+        # Parse editor command (handle arguments like "code --wait")
+        if platform.system() == "Windows":
+            # On Windows, use shell=True for better compatibility
+            cmd = f'{editor} "{tmp_path}"'
+            result = subprocess.run(cmd, shell=True, check=False)
+        else:
+            # On Unix, properly split the command
+            editor_parts = shlex.split(editor)
+            result = subprocess.run(editor_parts + [str(tmp_path)], check=False)
 
+        # Check if editor exited successfully
         if result.returncode != 0:
-            raise RuntimeError(f"Editor exited with code {result.returncode}")
+            # Note: Some editors (like VS Code) may return non-zero even on success
+            # So we don't raise an error here, just check if file was modified
+            pass
 
         # Read edited content
         edited_content = tmp_path.read_text(encoding="utf-8")
 
         # Return None if content unchanged
-        if edited_content == content:
+        if edited_content.strip() == content.strip():
             return None
 
         return edited_content
@@ -84,3 +92,4 @@ def open_in_editor(content: str, file_extension: str = ".txt") -> Optional[str]:
             tmp_path.unlink()
         except Exception:
             pass  # Ignore cleanup errors
+

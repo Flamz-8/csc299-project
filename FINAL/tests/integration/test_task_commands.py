@@ -215,3 +215,172 @@ class TestTaskCommands:
 
         assert result.exit_code == 0
         assert "completed" in result.output.lower() or "checked" in result.output.lower()
+
+    def test_delete_task_with_confirmation(self, temp_data_dir: Path) -> None:
+        """Test deleting a task with confirmation prompt."""
+        runner = CliRunner()
+
+        # Create a task
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "add", "task", "Task to delete"],
+        )
+        assert result.exit_code == 0
+        task_id = result.output.split("Task created: ")[1].split()[0]
+
+        # Delete with confirmation (answer yes)
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "task", "delete", task_id],
+            input="y\n",
+        )
+
+        assert result.exit_code == 0
+        assert "deleted" in result.output.lower()
+        assert task_id in result.output
+
+        # Verify task is deleted by trying to view it
+        view_result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "task", task_id],
+        )
+        assert view_result.exit_code == 1
+        assert "not found" in view_result.output.lower()
+
+    def test_delete_task_cancel_confirmation(self, temp_data_dir: Path) -> None:
+        """Test cancelling task deletion at confirmation prompt."""
+        runner = CliRunner()
+
+        # Create a task
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "add", "task", "Task to keep"],
+        )
+        assert result.exit_code == 0
+        task_id = result.output.split("Task created: ")[1].split()[0]
+
+        # Delete but cancel at confirmation (answer no)
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "task", "delete", task_id],
+            input="n\n",
+        )
+
+        # When user declines confirmation, the message should indicate cancellation
+        assert "cancel" in result.output.lower() or "abort" in result.output.lower()
+
+        # Verify task still exists
+        view_result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "task", task_id],
+        )
+        assert view_result.exit_code == 0
+        assert "Task to keep" in view_result.output
+
+    def test_delete_task_with_yes_flag(self, temp_data_dir: Path) -> None:
+        """Test deleting a task with --yes flag (skip confirmation)."""
+        runner = CliRunner()
+
+        # Create a task
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "add", "task", "Quick delete task"],
+        )
+        assert result.exit_code == 0
+        task_id = result.output.split("Task created: ")[1].split()[0]
+
+        # Delete with --yes flag (no prompt)
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "task", "delete", task_id, "--yes"],
+        )
+
+        assert result.exit_code == 0
+        assert "deleted" in result.output.lower()
+        assert task_id in result.output
+
+    def test_delete_task_with_subtasks(self, temp_data_dir: Path) -> None:
+        """Test deleting a task that has subtasks."""
+        runner = CliRunner()
+
+        # Create task with subtasks
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "add", "task", "Task with subtasks"],
+        )
+        assert result.exit_code == 0
+        task_id = result.output.split("Task created: ")[1].split()[0]
+
+        # Add subtasks
+        runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "task", "add-subtask", task_id, "Subtask 1"],
+        )
+        runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "task", "add-subtask", task_id, "Subtask 2"],
+        )
+
+        # Delete task with --yes flag
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "task", "delete", task_id, "-y"],
+        )
+
+        assert result.exit_code == 0
+        assert "deleted" in result.output.lower()
+
+    def test_delete_task_with_linked_notes(self, temp_data_dir: Path) -> None:
+        """Test deleting a task that has linked notes (should clean up references)."""
+        runner = CliRunner()
+
+        # Create note and task
+        note_result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "add", "note", "Linked note"],
+        )
+        note_id = note_result.output.split("Note created: ")[1].split()[0]
+
+        task_result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "add", "task", "Task with note"],
+        )
+        task_id = task_result.output.split("Task created: ")[1].split()[0]
+
+        # Link note to task
+        runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "task", "link-note", task_id, note_id],
+        )
+
+        # Delete task with --yes
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "task", "delete", task_id, "-y"],
+        )
+
+        assert result.exit_code == 0
+        assert "deleted" in result.output.lower()
+
+        # Verify note still exists and task reference is removed
+        view_result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "view", "note", note_id],
+        )
+        assert view_result.exit_code == 0
+        assert "Linked note" in view_result.output
+        # Task reference should not appear
+        assert task_id not in view_result.output or "0" in view_result.output
+
+    def test_delete_task_not_found(self, temp_data_dir: Path) -> None:
+        """Test deleting a non-existent task."""
+        runner = CliRunner()
+
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "task", "delete", "t999", "-y"],
+        )
+
+        assert result.exit_code == 1
+        assert "not found" in result.output.lower()
+

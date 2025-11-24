@@ -62,3 +62,49 @@ class CourseService:
             if course.name == course_name:
                 return course
         return None
+
+    def delete_course(self, course_name: str, reassign_to_inbox: bool = True) -> dict[str, int]:
+        """Delete a course and optionally move its items to inbox.
+
+        Args:
+            course_name: Course name to delete
+            reassign_to_inbox: If True, move items to inbox; if False, delete items
+
+        Returns:
+            Dictionary with counts: {"notes": count, "tasks": count}
+        """
+        data = self.store.load()
+        counts = {"notes": 0, "tasks": 0}
+
+        # Handle notes
+        for i, note_data in enumerate(data["notes"]):
+            if note_data.get("course") == course_name:
+                if reassign_to_inbox:
+                    note_data["course"] = None
+                    data["notes"][i] = note_data
+                    counts["notes"] += 1
+                else:
+                    # Mark for deletion (will remove later)
+                    note_data["_to_delete"] = True
+                    counts["notes"] += 1
+
+        # Handle tasks
+        for i, task_data in enumerate(data["tasks"]):
+            if task_data.get("course") == course_name:
+                if reassign_to_inbox:
+                    task_data["course"] = None
+                    data["tasks"][i] = task_data
+                    counts["tasks"] += 1
+                else:
+                    # Mark for deletion
+                    task_data["_to_delete"] = True
+                    counts["tasks"] += 1
+
+        # Remove items marked for deletion
+        if not reassign_to_inbox:
+            data["notes"] = [n for n in data["notes"] if not n.get("_to_delete")]
+            data["tasks"] = [t for t in data["tasks"] if not t.get("_to_delete")]
+
+        self.store.save(data)
+        return counts
+

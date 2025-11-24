@@ -16,12 +16,14 @@ def task() -> None:
     \b
     Commands:
       pkm task complete TASK_ID       - Mark task as done
+      pkm task delete TASK_ID         - Delete a task
       pkm task add-subtask TASK_ID    - Add a subtask/bullet point
       pkm task check-subtask TASK_ID  - Mark subtask as complete
 
     \b
     Examples:
       pkm task complete t_20251123_140000_xyz
+      pkm task delete t_20251123_140000_xyz
       pkm task add-subtask t_20251123_140000_xyz "Review chapter 1"
       pkm task check-subtask t_20251123_140000_xyz t_20251123_140000_xyz_sub_1
     """
@@ -63,6 +65,68 @@ def complete_task(ctx: click.Context, task_id: str) -> None:
 
     except Exception as e:
         error(f"Failed to complete task: {e}")
+        ctx.exit(1)
+
+
+@task.command(name="delete")
+@click.argument("task_id", required=True)
+@click.option("--yes", "-y", is_flag=True, help="Skip confirmation prompt")
+@click.pass_context
+def delete_task(ctx: click.Context, task_id: str, yes: bool) -> None:
+    """Delete a task.
+
+    \b
+    TASK_ID: The task ID to delete (use 'pkm view inbox' to see IDs)
+
+    \b
+    Options:
+      -y, --yes    Skip confirmation prompt
+
+    \b
+    Examples:
+      # With confirmation
+      pkm task delete t_20251123_140000_xyz
+
+      # Skip confirmation
+      pkm task delete t_20251123_140000_xyz -y
+
+    WARNING: This action cannot be undone!
+    """
+    try:
+        data_dir = get_data_dir(ctx)
+        service = TaskService(data_dir)
+
+        # Get the task
+        task = service.get_task(task_id)
+        if not task:
+            error(f"Task not found: {task_id}")
+            info("Use 'pkm view inbox' or 'pkm view tasks' to see task IDs")
+            ctx.exit(1)
+
+        # Show task details
+        if not yes:
+            click.echo(f"\nTask: {task.title}")
+            if task.due_date:
+                click.echo(f"Due: {task.due_date.strftime('%Y-%m-%d')}")
+            if task.subtasks:
+                click.echo(f"Subtasks: {len(task.subtasks)}")
+            if task.linked_notes:
+                click.echo(f"Linked notes: {len(task.linked_notes)}")
+            
+            if not click.confirm("\nAre you sure you want to delete this task?"):
+                from pkm.cli.helpers import warning
+                warning("Deletion cancelled")
+                ctx.exit(0)
+
+        # Delete the task
+        if service.delete_task(task_id):
+            success(f"Task deleted: {task_id}")
+        else:
+            error(f"Failed to delete task: {task_id}")
+            ctx.exit(1)
+
+    except Exception as e:
+        error(f"Failed to delete task: {e}")
         ctx.exit(1)
 
 
