@@ -18,7 +18,7 @@ class Note(BaseModel):
         linked_from_tasks: Task IDs that reference this note
     """
 
-    id: str = Field(..., pattern=r"^n\d+$")
+    id: str = Field(..., pattern=r"^n[\d_a-z]+$")
     content: str = Field(..., min_length=1, max_length=10000)
     created_at: datetime
     modified_at: datetime

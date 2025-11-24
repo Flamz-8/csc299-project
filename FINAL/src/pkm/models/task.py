@@ -38,7 +38,7 @@ class Task(BaseModel):
         subtasks: Nested subtasks
     """
 
-    id: str = Field(..., pattern=r"^t\d+$")
+    id: str = Field(..., pattern=r"^t[\d_a-z]+$")
     title: str = Field(..., min_length=1, max_length=200)
     created_at: datetime
     due_date: datetime | None = None

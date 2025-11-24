@@ -169,3 +169,36 @@ class TestOrganizeCommands:
         assert result.exit_code == 0
         assert "Biology" in result.output
         assert "Math" in result.output
+
+    def test_organize_with_partial_id(self, temp_data_dir: Path) -> None:
+        """Test organizing using partial IDs."""
+        runner = CliRunner()
+
+        # Create notes
+        note_result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "add", "note", "Test note for partial ID"],
+        )
+        assert note_result.exit_code == 0
+        full_note_id = note_result.output.split("Note created: ")[1].split()[0]
+
+        # Use just "n1" or the suffix to organize
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "organize", "note", "n1", "--course", "Test Course"],
+        )
+
+        assert result.exit_code == 0
+        assert "organized" in result.output.lower()
+
+    def test_organize_note_not_found(self, temp_data_dir: Path) -> None:
+        """Test error handling when note ID doesn't exist."""
+        runner = CliRunner()
+
+        result = runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "organize", "note", "nonexistent", "--course", "Test"],
+        )
+
+        assert result.exit_code == 1
+        assert "not found" in result.output.lower() or "note" in result.output.lower()

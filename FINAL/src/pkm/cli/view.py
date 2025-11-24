@@ -40,8 +40,9 @@ def view() -> None:
 
 
 @view.command(name="inbox")
+@click.option("--show-ids", is_flag=True, help="Show item IDs in the output")
 @click.pass_context
-def view_inbox(ctx: click.Context) -> None:
+def view_inbox(ctx: click.Context, show_ids: bool) -> None:
     """View all unorganized notes and tasks in your inbox.
 
     \b
@@ -55,6 +56,9 @@ def view_inbox(ctx: click.Context) -> None:
     Examples:
       # View inbox
       pkm view inbox
+
+      # View inbox with IDs
+      pkm view inbox --show-ids
 
       # View inbox with custom data location
       pkm --data-dir ~/study-notes view inbox
@@ -78,42 +82,79 @@ def view_inbox(ctx: click.Context) -> None:
 
     # Display notes
     if inbox_notes:
-        table = create_table("Inbox Notes", ["Content", "Created", "Topics"])
-        for note in inbox_notes:
-            table.add_row(
-                truncate(note.content, 60),
-                format_datetime(note.created_at),
-                ", ".join(note.topics) if note.topics else "-",
-            )
+        if show_ids:
+            table = create_table("Inbox Notes", ["ID", "Content", "Created", "Topics"])
+            for note in inbox_notes:
+                table.add_row(
+                    note.id,
+                    truncate(note.content, 60),
+                    format_datetime(note.created_at),
+                    ", ".join(note.topics) if note.topics else "-",
+                )
+        else:
+            table = create_table("Inbox Notes", ["Content", "Created", "Topics"])
+            for note in inbox_notes:
+                table.add_row(
+                    truncate(note.content, 60),
+                    format_datetime(note.created_at),
+                    ", ".join(note.topics) if note.topics else "-",
+                )
         Console().print(table)
         Console().print()
 
     # Display tasks
     if inbox_tasks:
-        table = create_table("Inbox Tasks", ["Title", "Due", "Priority", "Subtasks"])
-        for task in inbox_tasks:
-            priority_color = {
-                "high": "[red]HIGH[/red]",
-                "medium": "[yellow]MED[/yellow]",
-                "low": "[green]LOW[/green]",
-            }[task.priority]
+        if show_ids:
+            table = create_table("Inbox Tasks", ["ID", "Title", "Due", "Priority", "Subtasks"])
+            for task in inbox_tasks:
+                priority_color = {
+                    "high": "[red]HIGH[/red]",
+                    "medium": "[yellow]MED[/yellow]",
+                    "low": "[green]LOW[/green]",
+                }[task.priority]
 
-            # Format due date
-            due_display = format_due_date(task.due_date) if task.due_date else "-"
+                # Format due date
+                due_display = format_due_date(task.due_date) if task.due_date else "-"
 
-            # Format subtasks progress
-            if task.subtasks:
-                completed = sum(1 for sub in task.subtasks if sub.completed)
-                subtasks_display = f"{completed}/{len(task.subtasks)} ✓"
-            else:
-                subtasks_display = "-"
+                # Format subtasks progress
+                if task.subtasks:
+                    completed = sum(1 for sub in task.subtasks if sub.completed)
+                    subtasks_display = f"{completed}/{len(task.subtasks)} ✓"
+                else:
+                    subtasks_display = "-"
 
-            table.add_row(
-                truncate(task.title, 40),
-                truncate(due_display, 25),
-                priority_color,
-                subtasks_display,
-            )
+                table.add_row(
+                    task.id,
+                    truncate(task.title, 40),
+                    truncate(due_display, 25),
+                    priority_color,
+                    subtasks_display,
+                )
+        else:
+            table = create_table("Inbox Tasks", ["Title", "Due", "Priority", "Subtasks"])
+            for task in inbox_tasks:
+                priority_color = {
+                    "high": "[red]HIGH[/red]",
+                    "medium": "[yellow]MED[/yellow]",
+                    "low": "[green]LOW[/green]",
+                }[task.priority]
+
+                # Format due date
+                due_display = format_due_date(task.due_date) if task.due_date else "-"
+
+                # Format subtasks progress
+                if task.subtasks:
+                    completed = sum(1 for sub in task.subtasks if sub.completed)
+                    subtasks_display = f"{completed}/{len(task.subtasks)} ✓"
+                else:
+                    subtasks_display = "-"
+
+                table.add_row(
+                    truncate(task.title, 40),
+                    truncate(due_display, 25),
+                    priority_color,
+                    subtasks_display,
+                )
         Console().print(table)
 
     total = len(inbox_notes) + len(inbox_tasks)

@@ -82,6 +82,30 @@ class TestViewCommands:
         assert "Course note" not in result.output
         assert "Total inbox items: 1" in result.output
 
+    def test_view_inbox_with_show_ids(self, temp_data_dir: Path) -> None:
+        """Test viewing inbox with --show-ids flag displays IDs."""
+        runner = CliRunner()
+
+        # Add a note and task
+        runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "add", "note", "Test note"],
+        )
+        runner.invoke(
+            cli,
+            ["--data-dir", str(temp_data_dir), "add", "task", "Test task"],
+        )
+
+        # View inbox with IDs
+        result = runner.invoke(
+            cli, ["--data-dir", str(temp_data_dir), "view", "inbox", "--show-ids"]
+        )
+
+        assert result.exit_code == 0
+        assert "ID" in result.output  # ID column should be present
+        assert "n1" in result.output  # Note ID should be visible
+        assert "t1" in result.output  # Task ID should be visible
+
     def test_add_task_with_due_date(self, temp_data_dir: Path) -> None:
         """Test US2-S1: Adding task with natural language due date."""
         runner = CliRunner()

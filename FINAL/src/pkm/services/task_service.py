@@ -9,6 +9,7 @@ from pkm.models.task import Subtask, Task
 from pkm.services.id_generator import generate_task_id
 from pkm.storage.json_store import JSONStore
 from pkm.storage.schema import deserialize_task, serialize_task
+from pkm.utils.id_matcher import find_matching_id
 
 
 class TaskService:
@@ -77,17 +78,24 @@ class TaskService:
         return task
 
     def get_task(self, task_id: str) -> Task | None:
-        """Get a task by ID.
+        """Get a task by ID (supports partial ID matching).
 
         Args:
-            task_id: Task ID
+            task_id: Full or partial task ID (e.g., "t1", "4xl", "t_20251123_154149_4xl")
 
         Returns:
-            Task if found, None otherwise
+            Task if found and unique match, None otherwise
         """
         data = self.store.load()
+        available_ids = [task_data["id"] for task_data in data["tasks"]]
+        
+        # Find matching ID (supports partial matching)
+        matched_id = find_matching_id(task_id, available_ids)
+        if not matched_id:
+            return None
+        
         for task_data in data["tasks"]:
-            if task_data["id"] == task_id:
+            if task_data["id"] == matched_id:
                 return deserialize_task(task_data)
         return None
 
@@ -243,16 +251,22 @@ class TaskService:
         """Assign a task to a course (move from inbox).
 
         Args:
-            task_id: Task ID to organize
+            task_id: Full or partial task ID to organize
             course: Course name to assign
 
         Returns:
-            Updated task if found, None otherwise
+            Updated task if found and unique match, None otherwise
         """
         data = self.store.load()
+        available_ids = [task_data["id"] for task_data in data["tasks"]]
+        
+        # Find matching ID (supports partial matching)
+        matched_id = find_matching_id(task_id, available_ids)
+        if not matched_id:
+            return None
 
         for i, task_data in enumerate(data["tasks"]):
-            if task_data["id"] == task_id:
+            if task_data["id"] == matched_id:
                 task = deserialize_task(task_data)
                 task.course = course
 

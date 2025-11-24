@@ -9,6 +9,7 @@ from pkm.models.note import Note
 from pkm.services.id_generator import generate_note_id
 from pkm.storage.json_store import JSONStore
 from pkm.storage.schema import deserialize_note, serialize_note
+from pkm.utils.id_matcher import find_matching_id
 
 
 class NoteService:
@@ -70,17 +71,24 @@ class NoteService:
         return note
 
     def get_note(self, note_id: str) -> Note | None:
-        """Get a note by ID.
+        """Get a note by ID (supports partial ID matching).
 
         Args:
-            note_id: Note ID
+            note_id: Full or partial note ID (e.g., "n1", "4xl", "n_20251123_154149_4xl")
 
         Returns:
-            Note if found, None otherwise
+            Note if found and unique match, None otherwise
         """
         data = self.store.load()
+        available_ids = [note_data["id"] for note_data in data["notes"]]
+        
+        # Find matching ID (supports partial matching)
+        matched_id = find_matching_id(note_id, available_ids)
+        if not matched_id:
+            return None
+        
         for note_data in data["notes"]:
-            if note_data["id"] == note_id:
+            if note_data["id"] == matched_id:
                 return deserialize_note(note_data)
         return None
 
@@ -105,16 +113,22 @@ class NoteService:
         """Assign a note to a course (move from inbox).
 
         Args:
-            note_id: Note ID to organize
+            note_id: Full or partial note ID to organize
             course: Course name to assign
 
         Returns:
-            Updated note if found, None otherwise
+            Updated note if found and unique match, None otherwise
         """
         data = self.store.load()
+        available_ids = [note_data["id"] for note_data in data["notes"]]
+        
+        # Find matching ID (supports partial matching)
+        matched_id = find_matching_id(note_id, available_ids)
+        if not matched_id:
+            return None
 
         for i, note_data in enumerate(data["notes"]):
-            if note_data["id"] == note_id:
+            if note_data["id"] == matched_id:
                 note = deserialize_note(note_data)
                 note.course = course
 
