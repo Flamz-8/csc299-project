@@ -49,8 +49,8 @@ uv run python -m pkm --help
 
 **Option 2: System-wide Installation**
 ```bash
-# Install as a tool (when published)
-uv tool install pro-study-planner
+# Install as a tool
+uv pip install -e .
 
 # Use pkm command globally
 pkm --help
