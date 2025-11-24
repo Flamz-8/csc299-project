@@ -27,7 +27,10 @@ Your personal knowledge management system for academic success.
 2. **Create a task with due date**
    ```
    pkm add task "Submit lab report" --due "tomorrow"
+   pkm add task "Final project" --due "Friday 11:59pm"
+   pkm add task "Study for exam" --due "2025-12-15"
    ```
+   Due date formats: "tomorrow", "next Friday", "in 3 days", "2025-12-01", "Dec 1", "Friday 11:59pm"
 
 3. **View your inbox**
    ```
@@ -48,6 +51,9 @@ Your personal knowledge management system for academic success.
 
 - **Quick Capture**: Add notes and tasks instantly to your inbox
 - **Task Management**: Set due dates, priorities, and break down with subtasks
+  - Natural language dates: "tomorrow", "next Friday", "in 3 days"
+  - Specific dates: "2025-12-01", "Dec 1 2025"
+  - Times: "Friday 11:59pm", "tomorrow at 3pm"
 - **Organization**: Assign items to courses and tag with topics
 - **Search**: Find anything across all your notes and tasks
 - **Stay on Track**: View tasks due today, this week, or overdue
